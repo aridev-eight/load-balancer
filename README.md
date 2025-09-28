@@ -29,6 +29,59 @@ This system allows you to submit tasks (like data processing, file operations, o
 - Monitoring: Spring Boot Actuator + Micrometer
 - Build Tool: Maven
 
+## Database Schema
+
+### Tasks Table
+
+```commandline
+CREATE TABLE tasks (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    task_type VARCHAR(255) NOT NULL,
+    payload TEXT,
+    status ENUM('PENDING', 'IN_PROGRESS', 'COMPLETED', 'FAILED') DEFAULT 'PENDING',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    started_at TIMESTAMP NULL,
+    completed_at TIMESTAMP NULL,
+    assigned_worker VARCHAR(255),
+    result TEXT,
+    error_message VARCHAR(500)
+);
+```
+
+### Worker Nodes Table
+
+```commandline
+CREATE TABLE worker_nodes (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    worker_name VARCHAR(255) NOT NULL UNIQUE,
+    host_address VARCHAR(255) NOT NULL,
+    port INT NOT NULL,
+    status ENUM('ACTIVE', 'INACTIVE', 'MAINTENANCE') DEFAULT 'ACTIVE',
+    cpu_usage DECIMAL(5,2),
+    memory_usage DECIMAL(5,2),
+    current_task_count INT DEFAULT 0,
+    max_task_capacity INT DEFAULT 10,
+    last_heartbeat TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### Task Execution History Table
+
+```commandline
+CREATE TABLE task_execution_history (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    task_id BIGINT NOT NULL,
+    worker_name VARCHAR(255) NOT NULL,
+    execution_start TIMESTAMP NOT NULL,
+    execution_end TIMESTAMP,
+    execution_status ENUM('SUCCESS', 'FAILURE', 'TIMEOUT'),
+    execution_time_ms BIGINT,
+    error_details TEXT,
+    FOREIGN KEY (task_id) REFERENCES tasks(id)
+);
+```
+
 ## Core Features
 
 ### 1. Task Management
